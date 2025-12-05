@@ -1,0 +1,829 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tarkov Profile Extension</title>
+    <meta name="description" content="View Tarkov player profiles with stats, equipment, and more." />
+    <link rel="stylesheet" href="styles.css" />
+    <style>
+        body {
+            background: #f5f5f5;
+            /* Fallback background */
+        }
+
+        .profile-container {
+            max-width: 1600px;
+            width: 1600px;
+            height: 600px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .profile-info {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(8px);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+        }
+
+        .profile-image {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .profile-image img {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .stats-section {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 40px;
+            margin-top: 20px;
+            align-items: start;
+        }
+
+        .player-info-center {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            text-align: center;
+            padding: 0 20px;
+        }
+
+        .player-info-center h1 {
+            margin: 0 0 8px 0;
+            font-size: 1.8rem;
+            color: #9146ff;
+        }
+
+        .player-info-center p {
+            margin: 0 0 10px 0;
+            font-size: 1rem;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .badge-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            margin-top: 5px;
+        }
+
+        .badge-container img {
+            object-fit: contain;
+            border-radius: 8px;
+            padding: 4px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        #prestige-icon {
+            width: 130px;
+            height: 150px;
+            border-radius: 50%;
+        }
+
+        #level-badge {
+            width: 100px;
+            height: 100px;
+        }
+
+        .stat-column {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stat-column h3 {
+            color: #9146ff;
+            margin: 0 0 15px 0;
+            font-size: 1.3rem;
+            text-align: center;
+        }
+
+        .stat-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 6px;
+            font-size: 0.95rem;
+        }
+
+        .stat-item span {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .weapons-section {
+            background: #f5f5f5;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .equipment-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+
+        .nav-arrow {
+            background: rgba(255, 255, 255, 0.8);
+            border: 2px solid #d0d0d0;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: bold;
+            color: #9146ff;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .nav-arrow:hover {
+            background: rgba(255, 255, 255, 1);
+            transform: scale(1.05);
+        }
+
+        .nav-arrow:active {
+            transform: scale(0.95);
+        }
+
+        .page-controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .page-arrow {
+            background: rgba(255, 255, 255, 0.7);
+            border: 2px solid #ccc;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: bold;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .page-arrow:hover {
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+        }
+
+        .page-arrow:active {
+            transform: scale(0.9);
+        }
+
+        #page-info {
+            font-size: 0.9rem;
+            color: #666;
+            font-weight: 500;
+            min-width: 80px;
+            text-align: center;
+        }
+
+        .equipment-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: repeat(5, 105px);
+            gap: 2px;
+            background: #e0e0e0;
+            padding: 2px;
+            border-radius: 12px;
+            flex: 1;
+            grid-template-areas:
+                "Earpiece Headwear FaceCover TacRig"
+                "Armband BodyArmor Eyewear TacRig"
+                "Holster BodyArmor Sheath Backpack"
+                "Primary Primary Primary Backpack"
+                "Secondary Secondary Secondary Backpack";
+        }
+
+        .slot {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid #d0d0d0;
+        }
+
+        .slot.empty {
+            opacity: 0.4;
+            background: rgba(200, 200, 200, 0.3);
+        }
+
+        .achievements-grid,
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: repeat(5, 105px);
+            gap: 2px;
+            background: #e0e0e0;
+            padding: 2px;
+            border-radius: 12px;
+            flex: 1;
+        }
+
+        .achievement-item,
+        .skill-item {
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 8px;
+            padding: 6px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            height: 100%;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+
+        .achievement-item img,
+        .skill-item img {
+            width: 48px;
+            height: 48px;
+            object-fit: contain;
+        }
+
+        .achievement-name,
+        .skill-name {
+            font-weight: bold;
+            color: #333;
+            font-size: 0.75rem;
+            line-height: 1.1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            line-clamp: 2;
+            max-height: 2.2em;
+        }
+
+        .achievement-date {
+            font-size: 0.6rem;
+            color: #666;
+            margin-top: 2px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .empty-item {
+            background: rgba(255, 255, 255, 0.3) !important;
+        }
+
+        .skill-level {
+            font-size: 0.7rem;
+            color: #666;
+            margin-top: 1px;
+        }
+
+        .no-data {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-style: italic;
+        }
+
+        .slot img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .slot .label {
+            position: absolute;
+            left: 8px;
+            top: 8px;
+            font-size: 0.75rem;
+            padding: 2px 6px;
+            border-radius: 6px;
+            background: rgba(0, 0, 0, 0.45);
+            color: #fff;
+            z-index: 10;
+        }
+
+        .slot .price {
+            position: absolute;
+            right: 4px;
+            bottom: 4px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            padding: 2px 4px;
+            border-radius: 4px;
+            background: rgba(144, 70, 255, 0.9);
+            color: #fff;
+            z-index: 10;
+            text-align: right;
+            max-width: calc(100% - 8px);
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+
+        .price.banned {
+            background: rgba(239, 68, 68, 0.9);
+            color: #fff;
+        }
+
+        .price.loading {
+            background: rgba(156, 156, 156, 0.8);
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 0.6;
+            }
+
+            50% {
+                opacity: 1;
+            }
+        }
+
+        .area-Earpiece {
+            grid-area: Earpiece;
+        }
+
+        .area-Headwear {
+            grid-area: Headwear;
+        }
+
+        .area-FaceCover {
+            grid-area: FaceCover;
+        }
+
+        .area-TacRig {
+            grid-area: TacRig;
+        }
+
+        .area-Armband {
+            grid-area: Armband;
+        }
+
+        .area-BodyArmor {
+            grid-area: BodyArmor;
+        }
+
+        .area-Eyewear {
+            grid-area: Eyewear;
+        }
+
+        .area-Pockets {
+            grid-area: Pockets;
+        }
+
+        .area-Dogtag {
+            grid-area: Dogtag;
+        }
+
+        .area-Primary {
+            grid-area: Primary;
+        }
+
+        .area-Holster {
+            grid-area: Holster;
+        }
+
+        .area-Secondary {
+            grid-area: Secondary;
+        }
+
+        .area-Sheath {
+            grid-area: Sheath;
+        }
+
+        .area-Pouch {
+            grid-area: Pouch;
+        }
+
+        .area-Empty {
+            grid-area: Empty;
+        }
+
+        .area-Backpack {
+            grid-area: Backpack;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 50px;
+        }
+
+        .error {
+            text-align: center;
+            padding: 50px;
+            color: #ffffff;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(8px);
+            border-radius: 16px;
+            max-width: 800px;
+            max-height: 80vh;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            animation: modalFadeIn 0.3s ease-out;
+        }
+
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 24px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            background: rgba(144, 70, 255, 0.1);
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            color: #9146ff;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .close-button {
+            background: none;
+            border: none;
+            font-size: 24px;
+            font-weight: bold;
+            color: #666;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .close-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: #333;
+        }
+
+        .modal-body {
+            padding: 20px 24px;
+            max-height: calc(80vh - 80px);
+            overflow-y: auto;
+        }
+
+        .gun-parts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 16px;
+            padding: 8px 0;
+        }
+
+        .gun-part-item {
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 12px;
+            padding: 12px;
+            text-align: center;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            min-height: 140px;
+        }
+
+        .gun-part-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            background: rgba(255, 255, 255, 0.95);
+        }
+
+        .gun-part-item img {
+            width: 64px;
+            height: 64px;
+            object-fit: contain;
+            border-radius: 8px;
+        }
+
+        .gun-part-name {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #333;
+            line-height: 1.2;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-height: 3.6em;
+            word-wrap: break-word;
+        }
+
+        .gun-part-type {
+            font-size: 0.75rem;
+            color: #666;
+            font-style: italic;
+            margin-top: 2px;
+        }
+
+        @media (max-width: 768px) {
+            .profile-container {
+                grid-template-columns: 1fr;
+                width: 100%;
+                height: auto;
+                min-height: 800px;
+            }
+
+            .stats-section {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .player-info-center {
+                order: -1;
+                margin-bottom: 20px;
+            }
+
+            .weapon-images {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            /* Mobile badge sizing */
+            #prestige-icon {
+                width: 100px;
+                height: 120px;
+            }
+
+            #level-badge {
+                width: 80px;
+                height: 80px;
+            }
+        }
+
+        @media (prefers-color-scheme: dark) {
+            body {
+                background: #2a2a2a;
+                /* Fallback for dark mode */
+            }
+
+            .profile-info,
+            .weapons-section {
+                background: rgba(17, 17, 17, 0.9);
+            }
+
+            .stat-item {
+                background: rgba(255, 255, 255, 0.1);
+            }
+
+            .stat-item span {
+                color: #fff;
+            }
+
+            .equipment-grid,
+            .achievements-grid,
+            .skills-grid {
+                background: #404040;
+            }
+
+            .slot {
+                background: rgba(255, 255, 255, 0.1);
+                border-color: #555;
+            }
+
+            .slot.empty {
+                background: rgba(100, 100, 100, 0.3);
+            }
+
+            .achievement-item,
+            .skill-item {
+                background: rgba(255, 255, 255, 0.1);
+            }
+
+            .achievement-name,
+            .skill-name {
+                color: #fff;
+            }
+
+            .achievement-date {
+                color: #ccc;
+            }
+
+            .skill-level {
+                color: #ccc;
+            }
+
+            .empty-item {
+                background: rgba(255, 255, 255, 0.1) !important;
+            }
+
+            .page-arrow {
+                background: rgba(255, 255, 255, 0.1);
+                border-color: #555;
+                color: #ccc;
+            }
+
+            .page-arrow:hover {
+                background: rgba(255, 255, 255, 0.2);
+                color: #fff;
+            }
+
+            #page-info {
+                color: #ccc;
+            }
+
+            /* Dark mode modal styles */
+            .modal-content {
+                background: rgba(17, 17, 17, 0.95);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+            }
+
+            .modal-header {
+                border-bottom-color: rgba(255, 255, 255, 0.1);
+                background: rgba(144, 70, 255, 0.2);
+            }
+
+            .modal-header h2 {
+                color: #b794f6;
+            }
+
+            .close-button {
+                color: #ccc;
+            }
+
+            .close-button:hover {
+                background: rgba(255, 255, 255, 0.1);
+                color: #fff;
+            }
+
+            .gun-part-item {
+                background: rgba(255, 255, 255, 0.1);
+                border-color: rgba(255, 255, 255, 0.2);
+            }
+
+            .gun-part-item:hover {
+                background: rgba(255, 255, 255, 0.15);
+            }
+
+            .gun-part-name {
+                color: #fff;
+            }
+
+            .gun-part-type {
+                color: #ccc;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="loading" class="loading">
+        <h2>Loading profile...</h2>
+    </div>
+
+    <div id="error" class="error" style="display: none;">
+        <h2>Profile not found</h2>
+        <p id="error-message">Could not find Tarkov profile for the specified AID.</p>
+    </div>
+
+    <div id="profile-content" style="display: none;">
+        <div class="profile-container">
+            <div class="profile-info">
+                <div class="profile-image">
+                    <img id="profile-avatar" src="temp.png" alt="Profile Avatar" />
+                </div>
+
+                <div class="stats-section">
+                    <div class="stat-column">
+                        <h3>🎯 PMC Stats</h3>
+                        <div class="stat-list">
+                            <div class="stat-item">Raids: <span id="pmc-raids">0</span></div>
+                            <div class="stat-item">Kills: <span id="pmc-kills">0</span></div>
+                            <div class="stat-item">Deaths: <span id="pmc-deaths">0</span></div>
+                            <div class="stat-item">Transits: <span id="pmc-transits">0</span></div>
+                            <div class="stat-item">K/D Ratio: <span id="pmc-kd">0.00</span></div>
+                            <div class="stat-item">S/R Ratio: <span id="pmc-survival">0.00%</span></div>
+                        </div>
+                    </div>
+
+                    <div class="player-info-center">
+                        <h1 id="player-name">Player Name</h1>
+                        <p id="player-info">Level 1 • Side • 0 XP</p>
+                        <div class="badge-container">
+                            <img id="prestige-icon" src="" alt="Prestige Icon" style="display: none;" />
+                            <img id="level-badge" src="" alt="Level Badge" style="display: none;" />
+                        </div>
+                    </div>
+
+                    <div class="stat-column">
+                        <h3>🗡️ Scav Stats</h3>
+                        <div class="stat-list">
+                            <div class="stat-item">Raids: <span id="scav-raids">0</span></div>
+                            <div class="stat-item">Kills: <span id="scav-kills">0</span></div>
+                            <div class="stat-item">Deaths: <span id="scav-deaths">0</span></div>
+                            <div class="stat-item">Transits: <span>-</span></div>
+                            <div class="stat-item">K/D Ratio: <span id="scav-kd">0.00</span></div>
+                            <div class="stat-item">S/R Ratio: <span id="scav-survival">0.00%</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="weapons-section">
+                <div class="equipment-header">
+                    <button class="nav-arrow" id="prev-view">←</button>
+                    <h2 id="equipment-title">Equipment</h2>
+                    <button class="nav-arrow" id="next-view">→</button>
+                </div>
+                <div class="page-controls" id="page-controls" style="display: none;">
+                    <button class="page-arrow" id="prev-page">◀</button>
+                    <span id="page-info"></span>
+                    <button class="page-arrow" id="next-page">▶</button>
+                </div>
+                <div class="equipment-grid" id="equipment-grid"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gun Parts Modal -->
+    <div id="gun-parts-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title">Gun Parts</h2>
+                <button id="close-modal" class="close-button">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="gun-parts-grid" class="gun-parts-grid"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://extension-files.twitch.tv/helper/v1/twitch-ext.min.js"></script>
+    <script src="profile-extension.js"></script>
+</body>
+
+</html>
