@@ -29,7 +29,6 @@ function loadExistingConfig() {
     method: "GET",
     headers: {
       Authorization: "Bearer " + authData.token,
-      "Content-Type": "application/json",
     },
   })
     .then((response) => {
